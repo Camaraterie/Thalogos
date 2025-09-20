@@ -1,0 +1,7 @@
+{
+  "name": "Thalamus",
+  "description": "The agent orchestration platform that seamlessly allows agents to communicate, synchronize, and collaboratively work together on your project.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

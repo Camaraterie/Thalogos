@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unload: Meditation & Idea Flow</title>
+    
+    <!-- Import JetBrains Mono font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use JetBrains Mono -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"JetBrains Mono"', 'monospace'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+            },
+          },
+        },
+      }
+    </script>
+    <!-- CSS for react-resizable -->
+    <style>
+      .react-resizable {
+        position: relative;
+      }
+      .react-resizable-handle {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-repeat: no-repeat;
+        background-origin: content-box;
+        box-sizing: border-box;
+        padding: 0 3px 3px 0;
+      }
+      .react-resizable-handle-sw {
+        bottom: 0;
+        left: 0;
+        cursor: sw-resize;
+        transform: rotate(90deg);
+      }
+      .react-resizable-handle-se {
+        bottom: 0;
+        right: 0;
+        cursor: se-resize;
+      }
+      .react-resizable-handle-nw {
+        top: 0;
+        left: 0;
+        cursor: nw-resize;
+        transform: rotate(180deg);
+      }
+      .react-resizable-handle-ne {
+        top: 0;
+        right: 0;
+        cursor: ne-resize;
+        transform: rotate(270deg);
+      }
+      .react-resizable-handle-w,
+      .react-resizable-handle-e {
+        top: 50%;
+        margin-top: -10px;
+        cursor: ew-resize;
+      }
+      .react-resizable-handle-w {
+        left: 0;
+        transform: rotate(135deg);
+      }
+      .react-resizable-handle-e {
+        right: 0;
+        transform: rotate(315deg);
+      }
+      .react-resizable-handle-n,
+      .react-resizable-handle-s {
+        left: 50%;
+        margin-left: -10px;
+        cursor: ns-resize;
+      }
+      .react-resizable-handle-n {
+        top: 0;
+        transform: rotate(225deg);
+      }
+      .react-resizable-handle-s {
+        bottom: 0;
+        transform: rotate(45deg);
+      }
+      .react-resizable-handle-se {
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuOCBMIDQuOCA0LjggTCA0LjggMCBMIDYgMCBMIDYgNiBaIiBmaWxsPSIjMDAwMDAwIi8+PC9nPjwvc3ZnPg==');
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
+    "zustand": "https://aistudiocdn.com/zustand@^4.5.4",
+    "zustand/middleware": "https://aistudiocdn.com/zustand@^4.5.4/middleware",
+    "zustand/": "https://aistudiocdn.com/zustand@^5.0.8/",
+    "react-draggable": "https://aistudiocdn.com/react-draggable@^4.4.6",
+    "react-resizable": "https://aistudiocdn.com/react-resizable@^3.0.5"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-900 text-slate-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
