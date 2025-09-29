@@ -80,26 +80,190 @@ Let me know if you'd like a deeper dive into any of these steps!
 - Keep your tone professional, encouraging, and clear.
 `;
 
+// Define tool functions for real orchestration
+const tools = [
+    {
+        functionDeclarations: [
+            {
+                name: "read_file",
+                description: "Read content from a file in the project",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: {
+                            type: "string",
+                            description: "File path relative to project root"
+                        }
+                    },
+                    required: ["path"]
+                }
+            },
+            {
+                name: "write_file",
+                description: "Write content to a file in the project",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: {
+                            type: "string",
+                            description: "File path relative to project root"
+                        },
+                        content: {
+                            type: "string",
+                            description: "Content to write to the file"
+                        }
+                    },
+                    required: ["path", "content"]
+                }
+            },
+            {
+                name: "list_files",
+                description: "List files and directories in a given path",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: {
+                            type: "string",
+                            description: "Directory path relative to project root (default: '.')"
+                        }
+                    }
+                }
+            },
+            {
+                name: "delegate_to_specialist",
+                description: "Delegate a task to a specialist AI agent",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        agent: {
+                            type: "string",
+                            enum: ["coding_specialist", "writing_specialist", "ui_ux_specialist", "backend_architect", "devops_engineer", "qa_engineer"],
+                            description: "The specialist agent to delegate to"
+                        },
+                        task: {
+                            type: "string",
+                            description: "The specific task to delegate"
+                        },
+                        context: {
+                            type: "string",
+                            description: "Additional context for the task"
+                        }
+                    },
+                    required: ["agent", "task"]
+                }
+            }
+        ]
+    }
+];
+
+// Tool execution function
+async function executeToolCall(toolCall: any): Promise<string> {
+    const { name, args } = toolCall;
+
+    try {
+        switch (name) {
+            case "read_file":
+                return await readFile(args.path);
+            case "write_file":
+                return await writeFile(args.path, args.content);
+            case "list_files":
+                return await listFiles(args.path || ".");
+            case "delegate_to_specialist":
+                return await delegateToSpecialist(args.agent, args.task, args.context);
+            default:
+                return `Unknown tool: ${name}`;
+        }
+    } catch (error) {
+        console.error(`Tool execution error for ${name}:`, error);
+        return `Error executing ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+}
+
+// Tool implementation functions (these will call backend APIs)
+async function readFile(path: string): Promise<string> {
+    try {
+        const response = await fetch(`/api/files/read?path=${encodeURIComponent(path)}`);
+        if (!response.ok) {
+            throw new Error(`Failed to read file: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return `File content for ${path}:\n\`\`\`\n${data.content}\n\`\`\``;
+    } catch (error) {
+        return `Error reading file ${path}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+}
+
+async function writeFile(path: string, content: string): Promise<string> {
+    try {
+        const response = await fetch('/api/files/write', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path, content })
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to write file: ${response.statusText}`);
+        }
+        return `Successfully wrote file: ${path}`;
+    } catch (error) {
+        return `Error writing file ${path}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+}
+
+async function listFiles(path: string): Promise<string> {
+    try {
+        const response = await fetch(`/api/files/list?path=${encodeURIComponent(path)}`);
+        if (!response.ok) {
+            throw new Error(`Failed to list files: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return `Files in ${path}:\n${data.files.map((f: any) => `- ${f.name} ${f.type === 'directory' ? '(dir)' : ''}`).join('\n')}`;
+    } catch (error) {
+        return `Error listing files in ${path}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+}
+
+async function delegateToSpecialist(agent: string, task: string, context?: string): Promise<string> {
+    try {
+        const response = await fetch('/api/agents/delegate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agent, task, context })
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to delegate to ${agent}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return `Response from ${agent}:\n${data.response}`;
+    } catch (error) {
+        return `Error delegating to ${agent}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+}
+
 export async function getGuideResponse(userMessage: string, history: Message[], codeContext: string | null, activeAgentIds: string[]): Promise<string> {
     const chatHistory = history.slice(0, -1).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }]
     }));
-    
-    const tools = [{ googleSearch: {} }];
 
     let fullUserMessage = userMessage;
     if (codeContext) {
         fullUserMessage += `\n\n---\n\n**Current Code Context:**\n\`\`\`\n${codeContext}\n\`\`\``;
     }
-    
-    // The activeAgentIds are now part of the core prompt's specialist list, 
-    // so we don't need to dynamically add them here anymore. The Orchestrator is aware of all specialists.
-    const systemInstruction = NEW_SYSTEM_INSTRUCTION;
+
+    const systemInstruction = NEW_SYSTEM_INSTRUCTION + `
+
+**REAL TOOL CAPABILITIES:**
+You now have access to real tools for file operations and agent delegation:
+- read_file(path): Read any file in the project
+- write_file(path, content): Write content to files
+- list_files(path): List directory contents
+- delegate_to_specialist(agent, task, context): Actually delegate to real AI agents
+
+Use these tools when appropriate to provide real functionality, not just simulated responses.`;
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash', // Using flash for faster orchestration logic
+            model: 'gemini-2.5-flash',
             contents: [
                 ...chatHistory,
                 { role: 'user', parts: [{ text: fullUserMessage }] }
@@ -112,11 +276,40 @@ export async function getGuideResponse(userMessage: string, history: Message[], 
                         threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
                     },
                 ],
-                // Tools are temporarily disabled to ensure the model focuses on the orchestration format.
-                // Re-enable if search grounding is needed alongside orchestration.
-                // tools, 
+                tools: tools,
             }
         });
+
+        // Handle tool calls if present
+        if (response.functionCalls && response.functionCalls.length > 0) {
+            let toolResults = "";
+            for (const toolCall of response.functionCalls) {
+                const result = await executeToolCall(toolCall);
+                toolResults += `\n\n**Tool Result (${toolCall.name}):**\n${result}`;
+            }
+
+            // Make a follow-up call with tool results
+            const followUpResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: [
+                    ...chatHistory,
+                    { role: 'user', parts: [{ text: fullUserMessage }] },
+                    { role: 'model', parts: [{ text: response.text || "Using tools..." }] },
+                    { role: 'user', parts: [{ text: `Tool Results:${toolResults}\n\nPlease provide your response based on these tool results.` }] }
+                ],
+                config: {
+                    systemInstruction: systemInstruction,
+                    safetySettings: [
+                        {
+                            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                        },
+                    ],
+                }
+            });
+
+            return followUpResponse.text ?? "I'm sorry, an empty response was received. Please try again.";
+        }
 
         return response.text ?? "I'm sorry, an empty response was received. Please try again.";
     } catch (error) {
